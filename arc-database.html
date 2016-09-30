@@ -1,0 +1,182 @@
+<!--
+@license
+Copyright 2016 The Advanced REST client authors
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License. You may obtain a copy of
+the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations under
+the License.
+-->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../app-pouchdb/app-pouchdb-conflict-resolution.html">
+<link rel="import" href="../app-pouchdb/app-pouchdb-index.html">
+<link rel="import" href="../app-pouchdb/app-pouchdb-query.html">
+<!--
+`<arc-database>` A database component for advanced rest client
+
+### Example
+```
+<arc-database></arc-database>
+```
+
+### Styling
+`<arc-database>` provides the following custom properties and mixins for styling:
+
+Custom property | Description | Default
+----------------|-------------|----------
+`--arc-database` | Mixin applied to the element | `{}`
+
+@group Logic Elements
+@element arc-database
+@demo demo/index.html
+-->
+<dom-module id="arc-database">
+  <template>
+    <style>
+     :host {
+      display: none;
+    }
+    </style>
+    <app-pouchdb-conflict-resolution strategy="lastWriteWins"></app-pouchdb-conflict-resolution>
+    <template is="dom-repeat" items="[[indexes]]" index-as="index">
+      <app-pouchdb-index adapter="[[adapter]]" db-name="[[store]]" fields="[[item.fields]]" name="[[item.name]]"></app-pouchdb-index>
+    </template>
+    <app-pouchdb-query id="query" adapter="[[adapter]]" db-name="[[store]]" selector="[[querySelector]]" fields="[[queryFields]]" sort="[[querySort]]" data="{{queryResult}}" limit="[[queryLimit]]"></app-pouchdb-query>
+  </template>
+  <script>
+  (function() {
+    'use strict';
+
+    class ArcDatabase {
+
+      beforeRegister() {
+        this.is = 'arc-database';
+        this._eventTarget = null;
+        this.properties = {
+          /**
+           * Name of the storage to initialize
+           */
+          store: String,
+          // Adapter to use. Indexeddb by default.
+          adapter: {
+            type: String,
+            value: 'idb'
+          },
+          /**
+           * The indexes to be set for the datastore.
+           * Indexes will change depending on the store name. If the store name is unknown then
+           * `error` event will be fired.
+           */
+          indexes: {
+            type: Array,
+            readOnly: true
+          },
+          // A selector passed to `<app-pouchdb-query>.selector`
+          querySelector: String,
+          // An array of fields passed to `<app-pouchdb-query>.fields`
+          queryFields: Array,
+          // An array of fields passed to `<app-pouchdb-query>.sort`
+          querySort: Array,
+          // The results of the query, if any.
+          queryResult: {
+            type: Array,
+            notify: true
+          },
+          /**
+           * The maximum number of documents that can be returned. The default (0) specifies
+           * no limit.
+           */
+          queryLimit: {
+            type: Number,
+            value: 0
+          },
+          /**
+           * The number of documents to skip before returning results that match the query.
+           * In other words, the offset from the beginning of the of the result set to start at.
+           */
+          querySkip: {
+            type: Number,
+            value: 0
+          }
+        };
+      }
+
+      get observers() {
+        return [
+          '_storeChanged(store)',
+          '_queryResultChanged(queryResult.*)'
+        ];
+      }
+
+      // index definitions for the `requests`
+      get requests() {
+        return [{
+          // Request URL field.
+          'fields': ['url']
+        }, {
+          // HTTP pethod name
+          'fields': ['method']
+        }, {
+          // combination of the url and method
+          'fields': ['url', 'method']
+        }, {
+          // Type of the request: saved, drive, history
+          'fields': ['type']
+        }, {
+          // Request name, can be empty.
+          'fields': ['name']
+        }, {
+          // Legacy project ID.
+          'fields': ['legacyProject']
+        }];
+      }
+
+      // attached() {
+      //   this._eventTarget = Polymer.dom(this).host || document;
+      //   this.listen(
+      //     this._eventTarget,
+      //     'old-database-request',
+      //     'databaseRequested');
+      // }
+      // detached() {
+      //   this.unlisten(
+      //     this._eventTarget,
+      //     'old-database-request',
+      //     'databaseRequested');
+      // }
+
+      _storeChanged(store) {
+        if (!store) {
+          this._setIndexes([]);
+          return;
+        }
+        if (!(store in this)) {
+          return this.fire('error', new Error(`The store ${store} is unknown.`));
+        }
+        var indexes = this[store];
+        if (indexes) {
+          this._setIndexes(indexes);
+        } else {
+          return this.fire('error', new Error(`Indexes for ${store} is invalid.`));
+        }
+      }
+
+      _queryResultChanged() {
+        // console.log('_queryResultChanged', this.queryResult);
+        this.fire('query-result', {
+          value: this.queryResult
+        });
+      }
+
+      query() {
+        this.$.query.refresh();
+      }
+    }
+    Polymer(ArcDatabase);
+  })();
+  </script>
+</dom-module>
