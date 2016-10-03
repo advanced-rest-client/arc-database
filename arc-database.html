@@ -23,6 +23,50 @@ the License.
 <arc-database></arc-database>
 ```
 
+## ARC database structure
+
+### ramlData
+* _id
+* name :String
+* specification :Object
+* importDate :String YYYY-mm-dd
+* source :Blob
+
+### ramlIndex
+* _id
+* ramlId :uuid
+* headers :String
+* payload :String
+* url :String
+* method :String
+* queryParameters :Array<String>
+* uriParameters :Array<String>
+
+### requests
+* _id
+* name
+* type
+* currentHistory
+* currentSaved
+
+### harData
+* _id
+* requestId
+* entries
+* pages
+
+### harIndex
+* _id
+* headers
+* payload
+* url
+* method
+* response
+* harId
+* requestId
+* name
+* type
+
 ### Styling
 `<arc-database>` provides the following custom properties and mixins for styling:
 
@@ -115,14 +159,13 @@ Custom property | Description | Default
       // index definitions for the `requests`
       get requests() {
         return [{
-          // Request URL field.
-          'fields': ['url']
-        }, {
           // HTTP pethod name
-          'fields': ['method']
+          'fields': ['currentSaved.url', 'currentSaved.method',
+            'currentSaved.method', 'currentSaved.url']
         }, {
           // combination of the url and method
-          'fields': ['url', 'method']
+          'fields': ['currentHistory.url', 'currentHistory.method',
+            'currentHistory.method', 'currentHistory.url']
         }, {
           // Type of the request: saved, drive, history
           'fields': ['type']
@@ -132,6 +175,44 @@ Custom property | Description | Default
         }, {
           // Legacy project ID.
           'fields': ['legacyProject']
+        }];
+      }
+
+      get harIndex() {
+        return [{
+          'fields': ['headers']
+        },{
+          'fields': ['payload']
+        },{
+          'fields': ['url']
+        },{
+          'fields': ['method']
+        },{
+          'fields': ['response']
+        }];
+      }
+
+      get ramlData() {
+        return [{
+          'fields': ['name']
+        }];
+      }
+
+      get ramlIndex() {
+        return [{
+          'fields': ['ramlId']
+        },{
+          'fields': ['headers']
+        },{
+          'fields': ['payload']
+        },{
+          'fields': ['url']
+        },{
+          'fields': ['method']
+        },{
+          'fields': ['queryParameters']
+        },{
+          'fields': ['uriParameters']
         }];
       }
 
