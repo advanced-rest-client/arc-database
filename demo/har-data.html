@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+  <meta name='viewport' content='width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes'>
+  <title>HarData demo</title>
+  <script src='../../webcomponentsjs/webcomponents-lite.js'></script>
+  <link rel='import' href='../../iron-demo-helpers/demo-pages-shared-styles.html'>
+  <link rel='import' href='../../app-pouchdb/app-pouchdb-document.html'>
+  <link rel='import' href='../../paper-input/paper-input.html'>
+  <link rel='import' href='../../paper-button/paper-button.html'>
+  <link rel='import' href='../../paper-dropdown-menu/paper-dropdown-menu.html'>
+  <link rel='import' href='../../paper-listbox/paper-listbox.html'>
+  <link rel='import' href='../../paper-item/paper-item.html'>
+  <link rel='import' href='../arc-database.html'>
+  <link rel="import" href="search-result-har-index.html">
+  <link rel="import" href="../../app-pouchdb-quick-search/app-pouchdb-quick-search.html">
+  <link rel="import" href="../../paper-toast/paper-toast.html">
+  <link rel="import" href="../../paper-spinner/paper-spinner.html">
+
+  <script src='../../chance/dist/chance.min.js'></script>
+  <script src="random-data-generator.js"></script>
+  <style is='custom-style' include='demo-pages-shared-styles'>
+  .vertical-section-container {
+    max-width: 600px;
+  }
+  .search-bar {
+    @apply(--layout-horizontal);
+  }
+  .search-bar paper-input {
+    @apply(--layout-flex);
+  }
+  </style>
+</head>
+<body unresolved>
+  <template is='dom-bind' id='app'>
+    <arc-database id='requests' store='requests'></arc-database>
+    <arc-database id='harData' store='harData'></arc-database>
+    <arc-database id='harIndex' store="harIndex"></arc-database>
+    <app-pouchdb-quick-search id="q" include-docs adapter="idb" query="{{searchTerm}}" db-name="harIndex" fields="[[searchFields]]" on-data="_results" highlighting highlighting-pre="<mark>" highlighting-post="</mark>"></app-pouchdb-quick-search>
+
+    <h3>The requests history store search</h3>
+    <div class="search-bar">
+      <paper-input label="search term" value="{{searchTerm}}"></paper-input>
+      <paper-button raised on-tap="search">go</paper-button>
+    </div>
+    <paper-spinner active="[[searching]]"></paper-spinner>
+    <div hidden$="[[!notFound]]">
+      <p class="not-found">No matches found for <b>[[lastQuery]]</b>. Try to redefine your query.</p>
+    </div>
+
+    <section class="results" hidden$="[[!hasResults]]">
+      <h3>Search results for query <b>[[lastQuery]]</b> ([[allResultsNumber]] found)</h3>
+      <!-- <p>Doubble click on an item to see details</p> -->
+      <template is="dom-repeat" items="[[searchResults]]" index-as="index">
+        <search-result-har-index highlighting="[[item.highlighting]]" type="[[item.type]]" name="[[item.name]]"></search-result-har-index>
+      </template>
+    </section>
+
+    <paper-toast text="Enter you query first" id="emptyQuery"></paper-toast>
+  </template>
+  <script>
+  (function(app) {
+    'use strict';
+
+    app.searchTerm = '';
+    app.lastQuery = '';
+    app.notFound = false;
+    app.searching = false;
+    app.searchFields = ['headers', 'payload', 'url', 'response'];
+    app.searchResults = [];
+    app.allResultsNumber = 0;
+    app.hasResults = false;
+
+    app.search = () => {
+      app.notFound = false;
+      app.hasResults = false;
+      app.lastQuery = '';
+      if (!app.searchTerm) {
+        return app.$.emptyQuery.open();
+      }
+      app.searching = true;
+      app.lastQuery = app.searchTerm;
+      app.$.q.refresh();
+    };
+    app._results = (e) => {
+      let res = e.detail.result;
+      // console.log(res);
+      if (res.rows.length === 0) {
+        app.notFound = true;
+        app.searching = false;
+        return;
+      }
+
+      app.allResultsNumber = res.total_rows;
+      var requestIds = [];
+      let promises = res.rows.map((i) => {
+        if (requestIds.indexOf(i.doc.requestId) === -1) {
+          requestIds.push(i.doc.requestId);
+        } else {
+          return null;
+        }
+        return app.$.requests.db.get(i.doc.requestId);
+      });
+      promises = promises.filter((p) => p !== null);
+      Promise.all(promises).then((result) => {
+        let resLength = result.length;
+        let rows = res.rows.map((item) => {
+          // search for request id
+          let itemRequestId =  item.doc.requestId;
+          for (let i = 0; i < resLength; i++) {
+            let r = result[i];
+            if (r._id === itemRequestId) {
+              item.type = r.type;
+              item.name = r.name;
+            }
+          }
+          return item;
+        });
+        app.searchResults = rows;
+        app.hasResults = true;
+        app.searching = false;
+      });
+
+    };
+
+    window.addEventListener('WebComponentsReady', function(e) {
+      var saveData = (requests) => {
+        var saveRequests = requests.map((item) => {
+          let o = Object.assign({}, item);
+          delete o.hars;
+          return o;
+        });
+
+        var mapHars = (hars, id) => {
+          return hars.map((item) => {
+            item.requestId = id;
+            return item;
+          });
+        };
+
+        app.$.requests.db.bulkDocs(saveRequests)
+        .then((result) => {
+          var res = [];
+          result.forEach((insert, i) => {
+            var hars = mapHars(requests[i].hars, insert.id);
+            res = res.concat(hars);
+          });
+          return res;
+        })
+        .then((hars) => {
+          return app.$.harData.db.bulkDocs(hars)
+          .then((inserts) => {
+            return inserts.map((insert, i) => {
+              var item = hars[i];
+              var headers = '';
+              item.request.headers.forEach((h) => headers += h.name + ': ' + h.value + '\n');
+              return {
+                headers: headers,
+                payload: item.request.postData,
+                url: item.request.url,
+                method: item.request.post,
+                response: item.response.content.text,
+                harDataId: insert.id,
+                requestId: item.requestId
+              };
+            });
+          });
+        })
+        .then((index) => app.$.harIndex.db.bulkDocs(index));
+        console.log(saveRequests, requests);
+      };
+
+      app.$.requests.db.info().then((info) => {
+        // jscs: disable
+        if (info.doc_count === 0) {
+          // jscs: enable
+          // Initialize database with some random data.
+          let data = genData();
+          saveData(data);
+        }
+      });
+    });
+  })(document.querySelector('#app'));
+  </script>
+</body>
+</html>
