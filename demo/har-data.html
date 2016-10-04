@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <title>HarData demo</title>
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+  <link rel="import" href="../../app-pouchdb/app-pouchdb-document.html">
+  <link rel="import" href="../../paper-input/paper-input.html">
+  <link rel="import" href="../../paper-button/paper-button.html">
+  <link rel="import" href="../../paper-dropdown-menu/paper-dropdown-menu.html">
+  <link rel="import" href="../../paper-listbox/paper-listbox.html">
+  <link rel="import" href="../../paper-item/paper-item.html">
+  <link rel="import" href="../arc-database.html">
+  <script src="../../chance/dist/chance.min.js"></script>
+  <style is="custom-style" include="demo-pages-shared-styles">
+  .vertical-section-container {
+    max-width: 600px;
+  }
+  </style>
+</head>
+<body unresolved>
+  <template is="dom-bind" id="app">
+    <arc-database id="requests" store="requests"></arc-database>
+    <arc-database id="harData" store="harData"></arc-database>
+    <arc-database id="harIndex" store="harIndex"></arc-database>
+  </template>
+  <script>
+  (function(app) {
+    window.addEventListener('WebComponentsReady', function(e) {
+      var genRequests = () => {
+        var methods = ['GET', 'POST', 'PUT', 'DELETE'];
+        var methodsLength = methods.length;
+        var res = [];
+        for (var i = 0; i < 1000; i++) {
+          var name;
+          var type = chance.bool() ? 'saved' : 'history';
+          if (type === 'saved') {
+            name = chance.sentence({words: chance.integer({min: 1, max: 5})});
+          }
+          var url = chance.url();
+          var method = methods[chance.integer({min: 0, max: methodsLength - 1})];
+          var headers = '';
+          for (var j = 0; j < chance.integer({min: 0, max: 10}); j++) {
+            headers += 'X-' + chance.word();
+            headers += ': ' + chance.sentence({words: 3}) + '\n';
+          }
+          var payload = null;
+          if (['GET', 'DELETE'].indexOf(method) === -1) {
+            payload = chance.paragraph();
+          }
+          var obj = {
+            type: type,
+            url: url,
+            method: method,
+            headers: headers
+          };
+          if (payload) {
+            obj.payload = payload;
+          }
+          if (name) {
+            obj.name = name;
+          }
+          res.push(obj);
+        }
+        return res;
+      };
+      var genData = () => {
+        var requests = genRequests();
+        var rSave = [];
+        var hdSave = [];
+        var hiSave = [];
+      };
+      app.$.requests.db.info().then((info) => {
+        if (info.doc_count === 0) {
+          genData();
+        }
+        genData();
+      });
+    });
+  })(document.querySelector('#app'));
+  </script>
+</body>
+</html>
