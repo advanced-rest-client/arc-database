@@ -38,10 +38,11 @@
   },
   "ignore": [
     "**/.*",
+    "dependencyci.yml",
     "node_modules",
     "bower_components",
     "test",
     "tasks"
   ],
-  "version": "1.0.3"
+  "version": "1.0.4"
 }
