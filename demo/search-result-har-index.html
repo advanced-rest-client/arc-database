@@ -1,0 +1,83 @@
+<!--
+@license
+Copyright 2016 The Advanced REST client authors
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License. You may obtain a copy of
+the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations under
+the License.
+-->
+<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+
+<dom-module id="search-result-har-index">
+  <template strip-whitespace>
+    <style>
+    :host {
+      display: block;
+      margin: 8px 0;
+      padding: 8px;
+      border-bottom: 1px rgba(0, 0, 0, 0.24) dotted;
+    }
+    </style>
+    <p>Item type: [[type]]</p>
+    <div hidden$="[[!hasName]]">
+      <b>Request name: [[name]]</b>
+    </div>
+    <div hidden$="[[!highlighting.url]]">
+      <label>URL</label>
+      <p is="inner-html" label="[[highlighting.url]]"></p>
+    </div>
+    <div hidden$="[[!highlighting.headers]]">
+      <label>In headers</label>
+      <p is="inner-html" label="[[highlighting.headers]]"></p>
+    </div>
+    <div hidden$="[[!highlighting.payload]]">
+      <label>In payload</label>
+      <p is="inner-html" label="[[highlighting.payload]]"></p>
+    </div>
+    <div hidden$="[[!highlighting.response]]">
+      <label>In response</label>
+      <p is="inner-html" label="[[highlighting.response]]"></p>
+    </div>
+  </template>
+  <script>
+Polymer({
+  is: 'search-result-har-index',
+  properties: {
+    highlighting: Object,
+    name: String,
+    type: String,
+    hasName: {
+      type: Boolean,
+      value: false,
+      computed: '_computeHasName(name)'
+    }
+  },
+
+  _computeHasName: function(name) {
+    return !!name;
+  }
+});
+Polymer({
+  is: 'inner-html',
+  extends: 'p',
+
+  properties: {
+    label: String
+  },
+
+  observers: [
+    '_labelChanged(label)'
+  ],
+
+  _labelChanged: function(label) {
+    this.innerHTML = label;
+  }
+});
+  </script>
+</dom-module>

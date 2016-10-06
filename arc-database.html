@@ -23,16 +23,56 @@ the License.
 <arc-database></arc-database>
 ```
 
-### Styling
-`<arc-database>` provides the following custom properties and mixins for styling:
+## ARC database structure
 
-Custom property | Description | Default
-----------------|-------------|----------
-`--arc-database` | Mixin applied to the element | `{}`
+### ramlData
+- _id
+- name :String
+- specification :Object
+- importDate :String YYYY-mm-dd
+- source :Blob
+
+### ramlIndex
+
+- _id
+- ramlId :uuid
+- headers :String
+- payload :String
+- url :String
+- method :String
+- queryParameters :Array<String>
+- uriParameters :Array<String>
+
+### requests
+- _id
+- name
+- type
+- currentHistory
+- currentSaved
+
+### harData
+- _id
+- requestId
+- entries
+- pages
+
+### harIndex
+- _id
+- headers
+- payload
+- url
+- method
+- response
+- harDataId
+- requestId
+- name
+- type
+- requestTime
 
 @group Logic Elements
 @element arc-database
-@demo demo/index.html
+@demo demo/index.html Requests datastore
+@demo demo/har-data.html HarData datastore
 -->
 <dom-module id="arc-database">
   <template>
@@ -45,7 +85,7 @@ Custom property | Description | Default
     <template is="dom-repeat" items="[[indexes]]" index-as="index">
       <app-pouchdb-index adapter="[[adapter]]" db-name="[[store]]" fields="[[item.fields]]" name="[[item.name]]"></app-pouchdb-index>
     </template>
-    <app-pouchdb-query id="query" adapter="[[adapter]]" db-name="[[store]]" selector="[[querySelector]]" fields="[[queryFields]]" sort="[[querySort]]" data="{{queryResult}}" limit="[[queryLimit]]"></app-pouchdb-query>
+    <app-pouchdb-query db="{{db}}" id="query" adapter="[[adapter]]" db-name="[[store]]" selector="[[querySelector]]" fields="[[queryFields]]" sort="[[querySort]]" data="{{queryResult}}" limit="[[queryLimit]]"></app-pouchdb-query>
   </template>
   <script>
   (function() {
@@ -57,6 +97,10 @@ Custom property | Description | Default
         this.is = 'arc-database';
         this._eventTarget = null;
         this.properties = {
+          db: {
+            type: Object,
+            notify: true
+          },
           /**
            * Name of the storage to initialize
            */
@@ -115,14 +159,11 @@ Custom property | Description | Default
       // index definitions for the `requests`
       get requests() {
         return [{
-          // Request URL field.
-          'fields': ['url']
+          'fields': ['currentSaved.url', 'currentSaved.method',
+            'currentSaved.method', 'currentSaved.url']
         }, {
-          // HTTP pethod name
-          'fields': ['method']
-        }, {
-          // combination of the url and method
-          'fields': ['url', 'method']
+          'fields': ['currentHistory.url', 'currentHistory.method',
+            'currentHistory.method', 'currentHistory.url']
         }, {
           // Type of the request: saved, drive, history
           'fields': ['type']
@@ -132,6 +173,44 @@ Custom property | Description | Default
         }, {
           // Legacy project ID.
           'fields': ['legacyProject']
+        }];
+      }
+
+      get harIndex() {
+        return [{
+          'fields': ['headers']
+        },{
+          'fields': ['payload']
+        },{
+          'fields': ['url']
+        },{
+          'fields': ['method']
+        },{
+          'fields': ['response']
+        }];
+      }
+
+      get ramlData() {
+        return [{
+          'fields': ['name']
+        }];
+      }
+
+      get ramlIndex() {
+        return [{
+          'fields': ['ramlId']
+        },{
+          'fields': ['headers']
+        },{
+          'fields': ['payload']
+        },{
+          'fields': ['url']
+        },{
+          'fields': ['method']
+        },{
+          'fields': ['queryParameters']
+        },{
+          'fields': ['uriParameters']
         }];
       }
 
@@ -166,7 +245,6 @@ Custom property | Description | Default
       }
 
       _queryResultChanged() {
-        // console.log('_queryResultChanged', this.queryResult);
         this.fire('query-result', {
           value: this.queryResult
         });

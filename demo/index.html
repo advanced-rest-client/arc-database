@@ -68,7 +68,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <paper-button on-tap="_save" raised>close</paper-button>
         </div>
       </template>
-      <arc-database id="db" store="requests" query-selector="_id $gt 0" query-fields='["_id","name","url","method","type"]' query-sort='["_id"]' query-result="{{list}}"></arc-database>
+      <arc-database id="requests" store="requests" query-selector="_id $gt 0" query-fields='["_id","name","url","method","type"]' query-sort='["_id"]' query-result="{{list}}"></arc-database>
+
+      <arc-database id="ramlData" store="ramlData"></arc-database>
+      <arc-database id="ramlIndex" store="ramlIndex"></arc-database>
       <app-pouchdb-document db-name="requests" id="doc" data="{{editable}}" doc-id="{{currentId}}"></app-pouchdb-document>
     </div>
   </template>
@@ -86,8 +89,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     };
     app.search = () => {
       var q = app.searchTerm;
-      app.$.db.querySelector = `name $eq '${q}', name $gt '${q}', name $eq '${q}'`;
-      app.$.db.query();
+      app.$.requests.querySelector = `name $eq '${q}', name $gt '${q}', name $eq '${q}'`;
+      app.$.requests.query();
     };
   })(document.querySelector('#app'));
   </script>
