@@ -76,7 +76,7 @@ var genRequests = () => {
   }
   return res;
 };
-
+/*jshint unused:false */
 var genData = () => {
   var requests = genRequests();
   var urls = {};

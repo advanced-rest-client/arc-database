@@ -1,3 +1,13 @@
+<a name="1.0.3"></a>
+## [1.0.3](https://github.com/advanced-rest-client/arc-database/compare/1.0.2...v1.0.3) (2016-10-06)
+
+
+### Update
+
+* Making linter happy. Ceaned the code ([e6553d0620e983ec86760c3fb01fb47193cf649c](https://github.com/advanced-rest-client/arc-database/commit/e6553d0620e983ec86760c3fb01fb47193cf649c))
+
+
+
 <a name="1.0.2"></a>
 ## [1.0.2](https://github.com/advanced-rest-client/arc-database/compare/1.0.1...v1.0.2) (2016-10-04)
 

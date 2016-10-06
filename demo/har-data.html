@@ -64,7 +64,7 @@
   <script>
   (function(app) {
     'use strict';
-
+    /* global genData */
     app.searchTerm = '';
     app.lastQuery = '';
     app.notFound = false;
@@ -94,7 +94,7 @@
         return;
       }
 
-      app.allResultsNumber = res.total_rows;
+      app.allResultsNumber = res.totalRows;
       var requestIds = [];
       let promises = res.rows.map((i) => {
         if (requestIds.indexOf(i.doc.requestId) === -1) {
@@ -126,7 +126,7 @@
 
     };
 
-    window.addEventListener('WebComponentsReady', function(e) {
+    window.addEventListener('WebComponentsReady', function() {
       var saveData = (requests) => {
         var saveRequests = requests.map((item) => {
           let o = Object.assign({}, item);
