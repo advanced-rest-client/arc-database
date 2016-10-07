@@ -1,3 +1,23 @@
+<a name="1.0.7"></a>
+## [1.0.7](https://github.com/advanced-rest-client/arc-database/compare/1.0.2...v1.0.7) (2016-10-07)
+
+
+### Fix
+
+* Fixed variable name ([434518f5fa3535e163c79b9ae6d51b6a3d98226c](https://github.com/advanced-rest-client/arc-database/commit/434518f5fa3535e163c79b9ae6d51b6a3d98226c))
+
+### New
+
+* Added 'dependencyci' file ([fca3d8bc79ec91766eb6e1d81bcabd867deccbc7](https://github.com/advanced-rest-client/arc-database/commit/fca3d8bc79ec91766eb6e1d81bcabd867deccbc7))
+* Added 'dependencyci' file ([0afb2b03c9c7e3fedf7d4c4d374783f7a2ab612c](https://github.com/advanced-rest-client/arc-database/commit/0afb2b03c9c7e3fedf7d4c4d374783f7a2ab612c))
+* Added new indexes and query event handling ([7f5d00e383c393421d7f97d6744519591bd6dd5c](https://github.com/advanced-rest-client/arc-database/commit/7f5d00e383c393421d7f97d6744519591bd6dd5c))
+
+### Update
+
+* Making linter happy. Ceaned the code ([e6553d0620e983ec86760c3fb01fb47193cf649c](https://github.com/advanced-rest-client/arc-database/commit/e6553d0620e983ec86760c3fb01fb47193cf649c))
+
+
+
 <a name="1.0.6"></a>
 ## [1.0.6](https://github.com/advanced-rest-client/arc-database/compare/1.0.2...v1.0.6) (2016-10-07)
 
