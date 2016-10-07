@@ -52,3 +52,20 @@
 - type
 - requestTime
 
+### logs
+- _id String
+- type String
+- logs []
+- time String
+- stack String
+
+### variables
+- variable String
+- value String
+- scope String|number ('global', environmentId)
+- enabled boolean
+
+### environments
+- name String
+- enabled boolean
+
