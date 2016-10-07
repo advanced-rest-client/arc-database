@@ -69,6 +69,23 @@ the License.
 - type
 - requestTime
 
+### logs
+- _id String
+- type String
+- logs []
+- time String
+- stack String
+
+### variables
+- variable String
+- value String
+- scope String|number ('global', environmentId)
+- enabled boolean
+
+### environments
+- name String
+- enabled boolean
+
 @group Logic Elements
 @element arc-database
 @demo demo/index.html Requests datastore
@@ -85,176 +102,8 @@ the License.
     <template is="dom-repeat" items="[[indexes]]" index-as="index">
       <app-pouchdb-index adapter="[[adapter]]" db-name="[[store]]" fields="[[item.fields]]" name="[[item.name]]"></app-pouchdb-index>
     </template>
-    <app-pouchdb-query db="{{db}}" id="query" adapter="[[adapter]]" db-name="[[store]]" selector="[[querySelector]]" fields="[[queryFields]]" sort="[[querySort]]" data="{{queryResult}}" limit="[[queryLimit]]"></app-pouchdb-query>
+    <app-pouchdb-query db="{{db}}" id="query" adapter="[[adapter]]" db-name="[[store]]" selector="[[querySelector]]"
+      fields="[[queryFields]]" sort="[[querySort]]" data="{{queryResult}}" limit="[[queryLimit]]"></app-pouchdb-query>
   </template>
-  <script>
-  (function() {
-    'use strict';
-
-    class ArcDatabase {
-
-      beforeRegister() {
-        this.is = 'arc-database';
-        this._eventTarget = null;
-        this.properties = {
-          db: {
-            type: Object,
-            notify: true
-          },
-          /**
-           * Name of the storage to initialize
-           */
-          store: String,
-          // Adapter to use. Indexeddb by default.
-          adapter: {
-            type: String,
-            value: 'idb'
-          },
-          /**
-           * The indexes to be set for the datastore.
-           * Indexes will change depending on the store name. If the store name is unknown then
-           * `error` event will be fired.
-           */
-          indexes: {
-            type: Array,
-            readOnly: true
-          },
-          // A selector passed to `<app-pouchdb-query>.selector`
-          querySelector: String,
-          // An array of fields passed to `<app-pouchdb-query>.fields`
-          queryFields: Array,
-          // An array of fields passed to `<app-pouchdb-query>.sort`
-          querySort: Array,
-          // The results of the query, if any.
-          queryResult: {
-            type: Array,
-            notify: true
-          },
-          /**
-           * The maximum number of documents that can be returned. The default (0) specifies
-           * no limit.
-           */
-          queryLimit: {
-            type: Number,
-            value: 0
-          },
-          /**
-           * The number of documents to skip before returning results that match the query.
-           * In other words, the offset from the beginning of the of the result set to start at.
-           */
-          querySkip: {
-            type: Number,
-            value: 0
-          }
-        };
-      }
-
-      get observers() {
-        return [
-          '_storeChanged(store)',
-          '_queryResultChanged(queryResult.*)'
-        ];
-      }
-
-      // index definitions for the `requests`
-      get requests() {
-        return [{
-          'fields': ['currentSaved.url', 'currentSaved.method',
-            'currentSaved.method', 'currentSaved.url']
-        }, {
-          'fields': ['currentHistory.url', 'currentHistory.method',
-            'currentHistory.method', 'currentHistory.url']
-        }, {
-          // Type of the request: saved, drive, history
-          'fields': ['type']
-        }, {
-          // Request name, can be empty.
-          'fields': ['name']
-        }, {
-          // Legacy project ID.
-          'fields': ['legacyProject']
-        }];
-      }
-
-      get harIndex() {
-        return [{
-          'fields': ['headers']
-        },{
-          'fields': ['payload']
-        },{
-          'fields': ['url']
-        },{
-          'fields': ['method']
-        },{
-          'fields': ['response']
-        }];
-      }
-
-      get ramlData() {
-        return [{
-          'fields': ['name']
-        }];
-      }
-
-      get ramlIndex() {
-        return [{
-          'fields': ['ramlId']
-        },{
-          'fields': ['headers']
-        },{
-          'fields': ['payload']
-        },{
-          'fields': ['url']
-        },{
-          'fields': ['method']
-        },{
-          'fields': ['queryParameters']
-        },{
-          'fields': ['uriParameters']
-        }];
-      }
-
-      // attached() {
-      //   this._eventTarget = Polymer.dom(this).host || document;
-      //   this.listen(
-      //     this._eventTarget,
-      //     'old-database-request',
-      //     'databaseRequested');
-      // }
-      // detached() {
-      //   this.unlisten(
-      //     this._eventTarget,
-      //     'old-database-request',
-      //     'databaseRequested');
-      // }
-
-      _storeChanged(store) {
-        if (!store) {
-          this._setIndexes([]);
-          return;
-        }
-        if (!(store in this)) {
-          return this.fire('error', new Error(`The store ${store} is unknown.`));
-        }
-        var indexes = this[store];
-        if (indexes) {
-          this._setIndexes(indexes);
-        } else {
-          return this.fire('error', new Error(`Indexes for ${store} is invalid.`));
-        }
-      }
-
-      _queryResultChanged() {
-        this.fire('query-result', {
-          value: this.queryResult
-        });
-      }
-
-      query() {
-        this.$.query.refresh();
-      }
-    }
-    Polymer(ArcDatabase);
-  })();
-  </script>
+  <script src="arc-database.js"></script>
 </dom-module>
