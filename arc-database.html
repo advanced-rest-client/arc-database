@@ -23,68 +23,71 @@ the License.
 <arc-database></arc-database>
 ```
 
-## ARC database structure
+## ARC databases
 
-### ramlData
-- _id
-- name :String
-- specification :Object
-- importDate :String YYYY-mm-dd
-- source :Blob
+### history-data
+Keeps history (HAR) data. It should not be indexed since it's only to put and keep data.
+At least for now. In oposite to the `history-requests` datastore it also keeps response data.
 
-### ramlIndex
+This view can be huge!
 
-- _id
-- ramlId :uuid
-- headers :String
-- payload :String
-- url :String
-- method :String
-- queryParameters :Array<String>
-- uriParameters :Array<String>
-
-### requests
-- _id
-- name
-- type
-- currentHistory
-- currentSaved
-
-### harData
-- _id
-- requestId
-- entries
-- pages
-
-### harIndex
-- _id
-- headers
-- payload
+### saved-requests
+Requests saved by the user.
+Index on:
 - url
 - method
-- response
-- harDataId
-- requestId
-- name
-- type
-- requestTime
+- paylaod
+- headers
+The name is in the object key as a:
+```
+url encoded name + '/' url encoded url + '/' + method
+```
 
-### logs
-- _id String
-- type String
-- logs []
-- time String
-- stack String
+### legacy-projects
+Legacy structure and support will be here for some time more.
+There are no indexes for this object store.
+
+### history-requests
+All the requests made by the user. It does not contains response data.
+
+Indexes on:
+- time
+- url
+- method
+Object key is:
+```
+url encoded url + '/' + method + '/' + Date.now()
+```
+
+### external-requests
+Requests saved in the external datastores (Drive).
+
+Indexes on:
+- time
+- url
+- method
+Object key is:
+```
+url encoded name + '/' url encoded url + '/' + method
+```
+
+### cookies
+Cookies store for socket transport
+Main key is
+```
+domain + '/' + url encoded i.name + '/' + url encoded i.path;
+```
+
+### auth-data
+Saved credentials for socket transport
+Main key:
+```
+type + '/' + url encoded i.url;
+```
 
 ### variables
-- variable String
-- value String
-- scope String|number ('global', environmentId)
-- enabled boolean
-
-### environments
-- name String
-- enabled boolean
+User defined variables.
+Keys will be defined later.
 
 @group Logic Elements
 @element arc-database
@@ -173,75 +176,15 @@ the License.
         ];
       }
 
-      // index definitions for the `requests`
-      get requests() {
+      get savedRequests() {
         return [{
-          'fields': ['currentSaved.url', 'currentSaved.method',
-            'currentSaved.method', 'currentSaved.url'
-          ]
-        }, {
-          'fields': ['currentHistory.url', 'currentHistory.method',
-            'currentHistory.method', 'currentHistory.url'
-          ]
-        }, {
-          // Type of the request: saved, drive, history
-          'fields': ['type']
-        }, {
-          // Request name, can be empty.
-          'fields': ['name']
-        }, {
-          // Legacy project ID.
-          'fields': ['legacyProject']
+          'fields': ['name', 'method', 'url', 'legacyProject']
         }];
       }
 
-      get harIndex() {
+      get historyRequests() {
         return [{
-          'fields': ['headers']
-        }, {
-          'fields': ['payload']
-        }, {
-          'fields': ['url']
-        }, {
-          'fields': ['method']
-        }, {
-          'fields': ['response']
-        }];
-      }
-
-      get ramlData() {
-        return [{
-          'fields': ['name']
-        }];
-      }
-
-      get ramlIndex() {
-        return [{
-          'fields': ['ramlId']
-        }, {
-          'fields': ['headers']
-        }, {
-          'fields': ['payload']
-        }, {
-          'fields': ['url']
-        }, {
-          'fields': ['method']
-        }, {
-          'fields': ['queryParameters']
-        }, {
-          'fields': ['uriParameters']
-        }];
-      }
-
-      get logs() {
-        return [{
-          'fields': ['time', 'type']
-        }];
-      }
-
-      get variables() {
-        return [{
-          'fields': ['enabled', 'scope']
+          'fields': ['method', 'url', 'legacyProject']
         }];
       }
 
@@ -256,6 +199,7 @@ the License.
         this.listen(this._eventTarget, 'arc-database-query', '_databaseQuery');
         this.listen(this._eventTarget, 'arc-database-insert', '_databaseInsert');
       }
+
       detached() {
         this.unlisten(this._eventTarget, 'arc-database-query', '_databaseQuery');
         this.unlisten(this._eventTarget, 'arc-database-insert', '_databaseInsert');
@@ -312,10 +256,24 @@ the License.
           this._setIndexes([]);
           return;
         }
-        if (!(store in this)) {
-          return this.fire('error', new Error(`The store ${store} is unknown.`));
+        var indexes;
+        switch (store) {
+          case 'history-data': indexes = []; break;
+          case 'saved-requests': indexes = this.savedRequests; break;
+          case 'legacy-projects': indexes = []; break;
+          case 'logs': indexes = []; break;
+          case 'history-requests': break;
+          case 'external-requests': indexes = this.savedRequests; break;
+          case 'auth-data': indexes = []; break;
+          case 'cookies': indexes = []; break;
+          case 'variables': indexes = []; break;
+          default:
+            if (!(store in this)) {
+              return this.fire('error', new Error(`The store ${store} is unknown.`));
+            }
+            indexes = this[store];
         }
-        var indexes = this[store];
+
         if (indexes) {
           this._setIndexes(indexes);
         } else {
