@@ -184,7 +184,7 @@ Keys will be defined later.
 
       get historyRequests() {
         return [{
-          'fields': ['method', 'url', 'legacyProject']
+          'fields': ['method', 'url']
         }];
       }
 
@@ -267,6 +267,7 @@ Keys will be defined later.
           case 'auth-data': indexes = []; break;
           case 'cookies': indexes = []; break;
           case 'variables': indexes = []; break;
+          case 'url-history': indexes = []; break;
           default:
             if (!(store in this)) {
               return this.fire('error', new Error(`The store ${store} is unknown.`));
