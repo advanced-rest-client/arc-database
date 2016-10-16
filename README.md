@@ -6,66 +6,69 @@
 <arc-database></arc-database>
 ```
 
-## ARC database structure
+## ARC databases
 
-### ramlData
-- _id
-- name :String
-- specification :Object
-- importDate :String YYYY-mm-dd
-- source :Blob
+### history-data
+Keeps history (HAR) data. It should not be indexed since it's only to put and keep data.
+At least for now. In oposite to the `history-requests` datastore it also keeps response data.
 
-### ramlIndex
+This view can be huge!
 
-- _id
-- ramlId :uuid
-- headers :String
-- payload :String
-- url :String
-- method :String
-- queryParameters :Array<String>
-- uriParameters :Array<String>
-
-### requests
-- _id
-- name
-- type
-- currentHistory
-- currentSaved
-
-### harData
-- _id
-- requestId
-- entries
-- pages
-
-### harIndex
-- _id
-- headers
-- payload
+### saved-requests
+Requests saved by the user.
+Index on:
 - url
 - method
-- response
-- harDataId
-- requestId
-- name
-- type
-- requestTime
+- paylaod
+- headers
+The name is in the object key as a:
+```
+url encoded name + '/' url encoded url + '/' + method
+```
 
-### logs
-- _id String
-- type String
-- logs []
-- time String
-- stack String
+### legacy-projects
+Legacy structure and support will be here for some time more.
+There are no indexes for this object store.
+
+### history-requests
+All the requests made by the user. It does not contains response data.
+
+Indexes on:
+- time
+- url
+- method
+Object key is:
+```
+url encoded url + '/' + method + '/' + Date.now()
+```
+
+### external-requests
+Requests saved in the external datastores (Drive).
+
+Indexes on:
+- time
+- url
+- method
+Object key is:
+```
+url encoded name + '/' url encoded url + '/' + method
+```
+
+### cookies
+Cookies store for socket transport
+Main key is
+```
+domain + '/' + url encoded i.name + '/' + url encoded i.path;
+```
+
+### auth-data
+Saved credentials for socket transport
+Main key:
+```
+type + '/' + url encoded i.url;
+```
 
 ### variables
-- variable String
-- value String
-- scope String|number ('global', environmentId)
-- enabled boolean
-
-### environments
-- name String
-- enabled boolean
+User defined variables.
+Keys will be defined later.
 
