@@ -1,3 +1,14 @@
+<a name="1.0.10"></a>
+## [1.0.10](https://github.com/advanced-rest-client/arc-database/compare/1.0.7...v1.0.10) (2016-10-16)
+
+
+### Update
+
+* added indexes for saved requests ([635265f7a183691ad2344b4c7198b266b145379c](https://github.com/advanced-rest-client/arc-database/commit/635265f7a183691ad2344b4c7198b266b145379c))
+* Changed indexes ([c643375443772e06176222b7e72dca9842402e87](https://github.com/advanced-rest-client/arc-database/commit/c643375443772e06176222b7e72dca9842402e87))
+
+
+
 <a name="1.0.9"></a>
 ## [1.0.9](https://github.com/advanced-rest-client/arc-database/compare/1.0.7...v1.0.9) (2016-10-16)
 
