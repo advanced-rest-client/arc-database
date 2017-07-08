@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/advanced-rest-client/arc-database.svg?branch=stage)](https://travis-ci.org/advanced-rest-client/arc-database)  
+
+# arc-database
 
 `<arc-database>` A database component for advanced rest client
 
